@@ -66,7 +66,7 @@ def generate_function_signature(struct_name, struct_members):
 
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
-        function_signature = f'int32_t get{member_name.capitalize()}{function_name}(const RIPBRG& key, {member_type}* {member_name});'
+        function_signature = f'int32_t get{member_name.capitalize()}{function_name}(const RIPBRG& key, {member_type}* {member_name}) {{\n    // 関数の実装をここに記述\n}}\n'
         function_signatures.append(function_signature)
 
     return function_signatures
@@ -76,5 +76,9 @@ struct_name = 'Human'
 struct_members = {'age': 'int', 'height': 'double', 'name': 'std::string'}
 
 function_signatures = generate_function_signature(struct_name, struct_members)
-for signature in function_signatures:
-    print(signature)
+
+# 関数シグネチャをcppファイルに出力
+output_file_path = '/path/to/your/cpp_file.cpp'
+with open(output_file_path, 'w') as output_file:
+    for signature in function_signatures:
+        output_file.write(signature)
