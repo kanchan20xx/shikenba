@@ -12,7 +12,7 @@ def get_type_spelling(t):
 
 def get_doxygen_brief_comment():
     # Doxygenコメントのbrief部分を取得する関数
-    return '/**\n * \\brief\n */'
+    return '/*!\n * \\brief\n */'
 
 def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
