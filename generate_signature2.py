@@ -21,7 +21,7 @@ def get_doxygen_brief_comment(cursor):
 def generate_can_function(struct_name, member_name, brief_comment):
     # can関数の生成
     can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}"
-    can_function_signature = f'{brief_comment}\nbool {can_function_name}(const RIPBRG& key);'
+    can_function_signature = f'{brief_comment}\nbool {can_function_name}(const RIPBRG& key);' if brief_comment else f'bool {can_function_name}(const RIPBRG& key);'
     return can_function_signature
 
 def generate_set_function(struct_name, member_name, member_type, brief_comment):
@@ -31,8 +31,9 @@ def generate_set_function(struct_name, member_name, member_type, brief_comment):
     else:
         function_name = member_name
 
-    function_signature = f'{brief_comment}\nint32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
+    function_signature = f'{brief_comment}\nint32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});' if brief_comment else f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
     return function_signature
+
 
 def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
