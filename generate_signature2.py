@@ -1,6 +1,9 @@
 import clang.cindex
 import re
 
+# libclangのライブラリパスをグローバル変数として指定
+LIBCLANG_LIBRARY_PATH = "/path/to/clang/lib"
+
 def get_type_spelling(t):
     # 型情報を取得する関数
     if t.kind == clang.cindex.TypeKind.POINTER:
@@ -19,16 +22,17 @@ def generate_function_signature(struct_name, struct_members):
 
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
-        # "get"を"set"に置換
-        function_name_set = function_name.replace("get", "set", 1)
-        function_signature = f'int32_t {function_name_set}{member_name.capitalize()}{function_name}(const RIPBRG& key, {member_type}* {member_name});'
+        # "set"を接頭辞にし、メンバ名、構造体名の順に結合
+        function_name_set = f"set{member_name.capitalize()}{function_name}"
+        function_signature = f'int32_t {function_name_set}({member_type}* {member_name}, const {struct_name}& {function_name});'
         function_signatures.append(function_signature)
 
     return function_signatures
 
 def parse_cpp_file(file_path):
     # libclangを初期化
-    clang.cindex.Config.set_library_path("/path/to/clang/lib")  # libclangのライブラリパスを指定
+    clang.cindex.Config.set_library_path(LIBCLANG_LIBRARY_PATH)
+
     index = clang.cindex.Index.create()
 
     translation_unit = index.parse(file_path)
