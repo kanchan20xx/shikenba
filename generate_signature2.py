@@ -24,7 +24,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
             function_name = member_name
         # 関数名の接尾にユーザー入力の文字列を追加
         function_name += postfix
-        function_signature = f'int32_t set{function_name}(const RIPBRG& key, {member_type}* {member_name});'
+        function_signature = f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
         function_signatures.append(function_signature)
 
     return function_signatures
