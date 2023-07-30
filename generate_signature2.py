@@ -41,7 +41,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, (member_type, member_cursor) in struct_members.items():
         brief_comment = get_doxygen_brief_comment(member_cursor)
-        
+
         # can関数を追加
         can_function_signature = generate_can_function(struct_name, member_name, brief_comment)
         function_signatures.append(can_function_signature)
