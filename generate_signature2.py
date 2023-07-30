@@ -11,18 +11,15 @@ def get_type_spelling(t):
     else:
         return t.spelling
 
-def generate_function_signature(struct_name, struct_members):
-    # 関数名をlower camel caseに変換
-    function_name = re.sub(r'_(.)', lambda x: x.group(1).upper(), struct_name)
-
+def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
     function_signatures = []
 
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
-        # "set"を接頭辞にし、メンバ名、構造体名の順に結合
-        function_name_set = f"set{member_name.capitalize()}{function_name}"
-        function_signature = f'int32_t {function_name_set}(const RIPBRG& key, {member_type}* {member_name});'
+        # 関数名の接尾にユーザー入力の文字列を追加
+        function_name = f"set{member_name.capitalize()}{struct_name}{postfix}"
+        function_signature = f'int32_t {function_name}(const RIPBRG& key, {member_type}* {member_name});'
         function_signatures.append(function_signature)
 
     return function_signatures
@@ -54,18 +51,18 @@ def parse_cpp_file(file_path, libclang_path):
 if __name__ == "__main__":
     # コマンドライン引数のパース
     parser = argparse.ArgumentParser(description="Generate function signatures from C++ struct")
-    parser.add_argument("--cppfile", help="Path to the C++ file")
-    parser.add_argument("--libclang", help="Path to libclang library")
+    parser.add_argument("--cppfile", help="Path to the C++ file", required=True)
+    parser.add_argument("--libclang", help="Path to libclang library", required=True)
     args = parser.parse_args()
-
-    if not args.cppfile or not args.libclang:
-        parser.error("Both --cppfile and --libclang options are required.")
 
     # C++ファイルをパースして構造体情報を生成
     struct_dict = parse_cpp_file(args.cppfile, args.libclang)
 
+    # ユーザー入力を受け取る
+    user_input = input("Enter the postfix for function names: ")
+
     # 各構造体に対して関数シグネチャを生成し、出力
     for struct_name, struct_members in struct_dict.items():
-        function_signatures = generate_function_signature(struct_name, struct_members)
+        function_signatures = generate_function_signature(struct_name, struct_members, user_input)
         for signature in function_signatures:
             print(signature)
