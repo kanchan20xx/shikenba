@@ -13,9 +13,9 @@ def get_type_spelling(t):
 
 def get_doxygen_brief_comment(cursor):
     # doxygenのbriefコメントを取得する関数
-    comment = cursor.brief_comment
-    if comment:
-        return f"/*! {comment} */"
+    for child in cursor.get_children():
+        if child.kind == clang.cindex.CursorKind.PARM_DECL and child.brief_comment:
+            return f"/*! {child.brief_comment} */"
     return ""
 
 def generate_can_function(struct_name, member_name, brief_comment):
@@ -39,8 +39,8 @@ def generate_function_signature(struct_name, struct_members, postfix):
     function_signatures = []
 
     # 各メンバ変数に対して関数シグネチャを生成
-    for member_name, member_type in struct_members.items():
-        brief_comment = get_doxygen_brief_comment(struct_members[member_name])
+    for member_name, (member_type, member_cursor) in struct_members.items():
+        brief_comment = get_doxygen_brief_comment(member_cursor)
         
         # can関数を追加
         can_function_signature = generate_can_function(struct_name, member_name, brief_comment)
