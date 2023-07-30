@@ -2,6 +2,9 @@ import argparse
 import clang.cindex
 import re
 
+# libclangのパス
+LIBCLANG_PATH = ""
+
 def get_type_spelling(t):
     # 型情報を取得する関数
     if t.kind == clang.cindex.TypeKind.POINTER:
@@ -29,9 +32,9 @@ def generate_function_signature(struct_name, struct_members, postfix):
 
     return function_signatures
 
-def parse_cpp_file(file_path, libclang_path):
+def parse_cpp_file(file_path):
     # libclangを初期化
-    clang.cindex.Config.set_library_path(libclang_path)
+    clang.cindex.Config.set_library_file(LIBCLANG_PATH)
 
     index = clang.cindex.Index.create()
 
@@ -60,8 +63,10 @@ if __name__ == "__main__":
     parser.add_argument("--libclang", help="Path to libclang library", required=True)
     args = parser.parse_args()
 
+    LIBCLANG_PATH = args.libclang
+
     # C++ファイルをパースして構造体情報を生成
-    struct_dict = parse_cpp_file(args.cppfile, args.libclang)
+    struct_dict = parse_cpp_file(args.cppfile)
 
     # ユーザー入力を受け取る
     user_input = input("Enter the postfix for function names: ")
