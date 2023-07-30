@@ -63,6 +63,7 @@ if __name__ == "__main__":
     parser.add_argument("--libclang", help="Path to libclang library", required=True)
     args = parser.parse_args()
 
+    # libclangのパスを設定
     LIBCLANG_PATH = args.libclang
 
     # C++ファイルをパースして構造体情報を生成
@@ -76,3 +77,4 @@ if __name__ == "__main__":
         function_signatures = generate_function_signature(struct_name, struct_members, user_input)
         for signature in function_signatures:
             print(signature)
+
