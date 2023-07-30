@@ -24,7 +24,7 @@ def generate_function_signature(struct_name, struct_members):
     for member_name, member_type in struct_members.items():
         # "set"を接頭辞にし、メンバ名、構造体名の順に結合
         function_name_set = f"set{member_name.capitalize()}{function_name}"
-        function_signature = f'int32_t {function_name_set}({member_type}* {member_name}, const {struct_name}& {function_name});'
+        function_signature = f'int32_t {function_name_set}(const RIPBRG& key, {member_type}* {member_name});'
         function_signatures.append(function_signature)
 
     return function_signatures
