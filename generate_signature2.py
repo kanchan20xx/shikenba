@@ -18,7 +18,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
         # 変数名が既にキャメルケースである場合はそのまま使用
-        if not member_name.islower():
+        if not member_name[0].islower():
             function_name = member_name
         else:
             function_name = f"{member_name.capitalize()}"
