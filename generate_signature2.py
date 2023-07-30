@@ -1,17 +1,5 @@
-import clang
+import clang.cindex
 import re
-
-def parse_cpp_file(file_path):
-    # libclangを初期化
-    clang.cindex.Config.set_library_path("/usr/lib/libclang.dylib")  # libclangのライブラリパスを指定
-    index = clang.cindex.Index.create()
-
-    translation_unit = index.parse(file_path)
-    root = translation_unit.cursor
-
-    # 構造体の辞書と構造体情報を生成
-    struct_dict, struct_definition = generate_struct_dict_and_struct(root)
-    return struct_dict, struct_definition
 
 def get_type_spelling(t):
     # 型情報を取得する関数
@@ -22,60 +10,53 @@ def get_type_spelling(t):
     else:
         return t.spelling
 
-def generate_struct_dict_and_struct(node):
-    struct_dict = {}
-    struct_definition = ''
+def generate_function_signature(struct_name, struct_members):
+    # 関数名をlower camel caseに変換
+    function_name = re.sub(r'_(.)', lambda x: x.group(1).upper(), struct_name)
 
-    for c in node.get_children():
-        if c.kind == clang.cindex.CursorKind.FIELD_DECL:
-            # メンバ変数の情報を取得
-            member_name = c.spelling
-            member_type = get_type_spelling(c.type)
-            struct_dict[member_name] = member_type
+    # 関数シグネチャのリスト
+    function_signatures = []
 
-        elif c.kind == clang.cindex.CursorKind.STRUCT_DECL:
-            # 構造体のネスト対応
-            nested_struct_name = c.spelling
-            nested_struct_dict, nested_struct_definition = generate_struct_dict_and_struct(c)
-            struct_dict[nested_struct_name] = nested_struct_dict
-            struct_definition += nested_struct_definition
-
-    if node.kind == clang.cindex.CursorKind.STRUCT_DECL:
-        # 構造体の定義を取得
-        struct_name = node.spelling
-        struct_definition += f'struct {struct_name} ' + '{\n'
-        for member_name, member_type in struct_dict.items():
-            if isinstance(member_type, dict):
-                # ネストされた構造体の場合
-                nested_struct_def = generate_struct_definition(member_name, member_type)
-                struct_definition += nested_struct_def
-            else:
-                # メンバ変数の場合
-                struct_definition += f'    {member_type} {member_name};\n'
-        struct_definition += '};\n'
-
-    return struct_dict, struct_definition
-
-def generate_struct_definition(struct_name, struct_members):
-    # 構造体の定義を生成する関数
-    struct_definition = f'struct {struct_name} ' + '{\n'
+    # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
-        if isinstance(member_type, dict):
-            # ネストされた構造体の場合
-            nested_struct_def = generate_struct_definition(member_name, member_type)
-            struct_definition += nested_struct_def
-        else:
-            # メンバ変数の場合
-            struct_definition += f'    {member_type} {member_name};\n'
-    struct_definition += '};\n'
+        # "get"を"set"に置換
+        function_name_set = function_name.replace("get", "set", 1)
+        function_signature = f'int32_t {function_name_set}{member_name.capitalize()}{function_name}(const RIPBRG& key, {member_type}* {member_name});'
+        function_signatures.append(function_signature)
 
-    return struct_definition
+    return function_signatures
+
+def parse_cpp_file(file_path):
+    # libclangを初期化
+    clang.cindex.Config.set_library_path("/path/to/clang/lib")  # libclangのライブラリパスを指定
+    index = clang.cindex.Index.create()
+
+    translation_unit = index.parse(file_path)
+    root = translation_unit.cursor
+
+    # 構造体の辞書とメンバ変数の辞書を生成
+    struct_dict = {}
+    for c in root.get_children():
+        if c.kind == clang.cindex.CursorKind.STRUCT_DECL and c.spelling:
+            struct_name = c.spelling
+            struct_members = {}
+            for member in c.get_children():
+                if member.kind == clang.cindex.CursorKind.FIELD_DECL:
+                    member_name = member.spelling
+                    member_type = get_type_spelling(member.type)
+                    struct_members[member_name] = member_type
+            struct_dict[struct_name] = struct_members
+
+    return struct_dict
 
 # テスト用C++コードのパスを指定
 file_path = "test_struct.cpp"
 
-# C++ファイルをパースして構造体情報と構造体定義を生成
-struct_dict, struct_definition = parse_cpp_file(file_path)
+# C++ファイルをパースして構造体情報を生成
+struct_dict = parse_cpp_file(file_path)
 
-# 生成された構造体定義を表示
-print(struct_definition)
+# 各構造体に対して関数シグネチャを生成し、出力
+for struct_name, struct_members in struct_dict.items():
+    function_signatures = generate_function_signature(struct_name, struct_members)
+    for signature in function_signatures:
+        print(signature)
