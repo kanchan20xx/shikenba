@@ -34,7 +34,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
         function_name_lower_camel = camel_to_lower_camel(function_name)
 
         # 第一引数の仮引数名を生成
-        first_arg_name = f"{postfix.lower()}{struct_name}Key"
+        first_arg_name = f"{postfix.lower()}NodeKey"
 
         # can関数の生成
         can_function_name = f"canSet{function_name}"
