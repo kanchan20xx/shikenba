@@ -3,15 +3,7 @@ import clang.cindex
 import re
 
 def get_type_spelling(t):
-    """
-    型情報を取得する関数
-
-    Args:
-        t (clang.cindex.Type): クラス型
-
-    Returns:
-        str: 型情報を表す文字列
-    """
+    # 型情報を取得する関数
     if t.kind == clang.cindex.TypeKind.POINTER:
         return get_type_spelling(t.get_pointee()) + '*'
     elif t.kind == clang.cindex.TypeKind.LVALUEREFERENCE:
@@ -20,20 +12,18 @@ def get_type_spelling(t):
         return t.spelling
 
 def generate_function_signature(struct_name, struct_members, postfix):
-    """
-    構造体のメンバ変数から関数シグネチャを生成する関数
-
-    Args:
-        struct_name (str): 構造体の名前
-        struct_members (dict): メンバ変数の辞書
-        postfix (str): 関数名の接尾辞
-
-    Returns:
-        list: 関数シグネチャのリスト
-    """
+    # 関数シグネチャのリスト
     function_signatures = []
 
+    # can関数の生成
+    for member_name, _ in struct_members.items():
+        can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}{postfix}"
+        can_function_signature = f'bool {can_function_name}(const RIPBRG& key);'
+        function_signatures.append(can_function_signature)
+
+    # set関数の生成
     for member_name, member_type in struct_members.items():
+        # 変数名が既にキャメルケースである場合はそのまま使用
         if not member_name[0].isupper():
             function_name = f"{member_name[0].upper()}{member_name[1:]}"
         else:
@@ -46,16 +36,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
     return function_signatures
 
 def parse_cpp_file(file_path, libclang_path):
-    """
-    C++ファイルをパースして構造体情報を生成する関数
-
-    Args:
-        file_path (str): C++ファイルのパス
-        libclang_path (str): libclangのパス
-
-    Returns:
-        dict: 構造体の辞書とメンバ変数の辞書
-    """
+    # libclangを初期化
     clang.cindex.Config.set_library_path(libclang_path)
 
     index = clang.cindex.Index.create()
@@ -63,6 +44,7 @@ def parse_cpp_file(file_path, libclang_path):
     translation_unit = index.parse(file_path)
     root = translation_unit.cursor
 
+    # 構造体の辞書とメンバ変数の辞書を生成
     struct_dict = {}
     for c in root.get_children():
         if c.kind == clang.cindex.CursorKind.STRUCT_DECL and c.spelling:
@@ -78,15 +60,19 @@ def parse_cpp_file(file_path, libclang_path):
     return struct_dict
 
 if __name__ == "__main__":
+    # コマンドライン引数のパース
     parser = argparse.ArgumentParser(description="Generate function signatures from C++ struct")
     parser.add_argument("--cppfile", help="Path to the C++ file", required=True)
     parser.add_argument("--libclang", help="Path to libclang library", required=True)
     args = parser.parse_args()
 
+    # C++ファイルをパースして構造体情報を生成
     struct_dict = parse_cpp_file(args.cppfile, args.libclang)
 
+    # ユーザー入力を受け取る
     user_input = input("Enter the postfix for function names: ")
 
+    # 各構造体に対して関数シグネチャを生成し、出力
     for struct_name, struct_members in struct_dict.items():
         function_signatures = generate_function_signature(struct_name, struct_members, user_input)
         for signature in function_signatures:
