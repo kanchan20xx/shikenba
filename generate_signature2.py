@@ -20,14 +20,10 @@ def generate_function_signature(struct_name, struct_members, postfix):
 
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
-        # 変数名が既にキャメルケースである場合はそのまま使用
-        if not member_name[0].isupper():
-            function_name = f"{member_name[0].upper()}{member_name[1:]}"
-        else:
-            function_name = member_name
-        # 関数名の接尾にユーザー入力の文字列を追加
-        function_name += postfix
-        function_signature = f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
+        # 関数名の接頭に"set"を追加
+        function_name = f"set{member_name}{postfix}"
+        # 関数シグネチャを生成してリストに追加
+        function_signature = f"int32_t {function_name}(const RIPBRG& key, {member_type}& {member_name});"
         function_signatures.append(function_signature)
 
     return function_signatures
@@ -63,7 +59,6 @@ if __name__ == "__main__":
     parser.add_argument("--libclang", help="Path to libclang library", required=True)
     args = parser.parse_args()
 
-    # libclangのパスを設定
     LIBCLANG_PATH = args.libclang
 
     # C++ファイルをパースして構造体情報を生成
@@ -77,4 +72,3 @@ if __name__ == "__main__":
         function_signatures = generate_function_signature(struct_name, struct_members, user_input)
         for signature in function_signatures:
             print(signature)
-
