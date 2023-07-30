@@ -11,27 +11,35 @@ def get_type_spelling(t):
     else:
         return t.spelling
 
+def generate_can_function(struct_name, member_name):
+    # can関数の生成
+    can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}"
+    can_function_signature = f'bool {can_function_name}(const RIPBRG& key);'
+    return can_function_signature
+
+def generate_set_function(struct_name, member_name, member_type):
+    # set関数の生成
+    if not member_name[0].isupper():
+        function_name = f"{member_name[0].upper()}{member_name[1:]}"
+    else:
+        function_name = member_name
+
+    function_signature = f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
+    return function_signature
+
 def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
     function_signatures = []
 
-    # can関数の生成
-    for member_name, _ in struct_members.items():
-        can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}{postfix}"
-        can_function_signature = f'bool {can_function_name}(const RIPBRG& key);'
+    # 各メンバ変数に対して関数シグネチャを生成
+    for member_name, member_type in struct_members.items():
+        # can関数を追加
+        can_function_signature = generate_can_function(struct_name, member_name)
         function_signatures.append(can_function_signature)
 
-    # set関数の生成
-    for member_name, member_type in struct_members.items():
-        # 変数名が既にキャメルケースである場合はそのまま使用
-        if not member_name[0].isupper():
-            function_name = f"{member_name[0].upper()}{member_name[1:]}"
-        else:
-            function_name = member_name
-
-        function_name += postfix
-        function_signature = f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
-        function_signatures.append(function_signature)
+        # set関数を追加
+        set_function_signature = generate_set_function(struct_name, member_name, member_type)
+        function_signatures.append(set_function_signature)
 
     return function_signatures
 
