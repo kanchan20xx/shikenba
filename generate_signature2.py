@@ -14,6 +14,10 @@ def get_doxygen_brief_comment():
     # Doxygenコメントのbrief部分を取得する関数
     return '/*!\n * \\brief\n */'
 
+def camel_to_lower_camel(s):
+    # ロウワーキャメルケースに変換する関数
+    return s[0].lower() + s[1:]
+
 def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
     function_signatures = []
@@ -21,7 +25,8 @@ def generate_function_signature(struct_name, struct_members, postfix):
     # can関数の生成
     for member_name, _ in struct_members.items():
         can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}"
-        can_function_signature = f'{get_doxygen_brief_comment()}\nbool {can_function_name}(const RIPBRG& key);'
+        can_function_name_lower_camel = camel_to_lower_camel(can_function_name)
+        can_function_signature = f'{get_doxygen_brief_comment()}\nbool {can_function_name}(const RIPBRG_KEY &{can_function_name_lower_camel});'
         function_signatures.append(can_function_signature)
 
     # set関数の生成
@@ -33,9 +38,10 @@ def generate_function_signature(struct_name, struct_members, postfix):
             function_name = member_name
         # 関数名の接尾にユーザー入力の文字列を追加
         function_name += postfix
+        function_name_lower_camel = camel_to_lower_camel(function_name)
 
         # 関数シグネチャを生成
-        function_signature = f'{get_doxygen_brief_comment()}\nint32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
+        function_signature = f'{get_doxygen_brief_comment()}\nint32_t set{function_name}(const RIPBRG_KEY &{function_name_lower_camel}, {member_type} {member_name});'
         function_signatures.append(function_signature)
 
     return function_signatures
