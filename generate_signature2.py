@@ -22,14 +22,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
     function_signatures = []
 
-    # can関数の生成
-    for member_name, _ in struct_members.items():
-        can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}"
-        can_function_name_lower_camel = camel_to_lower_camel(can_function_name)
-        can_function_signature = f'{get_doxygen_brief_comment()}\nbool {can_function_name}(const RIPBRG_KEY &{can_function_name_lower_camel});'
-        function_signatures.append(can_function_signature)
-
-    # set関数の生成
+    # can関数とset関数の生成
     for member_name, member_type in struct_members.items():
         # 変数名が既にキャメルケースである場合はそのまま使用
         if not member_name[0].isupper():
@@ -40,9 +33,17 @@ def generate_function_signature(struct_name, struct_members, postfix):
         function_name += postfix
         function_name_lower_camel = camel_to_lower_camel(function_name)
 
-        # 関数シグネチャを生成
-        function_signature = f'{get_doxygen_brief_comment()}\nint32_t set{function_name}(const RIPBRG_KEY &{function_name_lower_camel}, {member_type} {member_name});'
-        function_signatures.append(function_signature)
+        # 第一引数の仮引数名を生成
+        first_arg_name = f"{postfix.lower()}{struct_name}Key"
+
+        # can関数の生成
+        can_function_name = f"canSet{function_name}"
+        can_function_signature = f'{get_doxygen_brief_comment()}\nbool {can_function_name}(const RIPBRG_KEY &{first_arg_name});'
+        function_signatures.append(can_function_signature)
+
+        # set関数の生成
+        set_function_signature = f'{get_doxygen_brief_comment()}\nint32_t set{function_name}(const RIPBRG_KEY &{first_arg_name}, {member_type} {member_name});'
+        function_signatures.append(set_function_signature)
 
     return function_signatures
 
