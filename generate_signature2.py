@@ -54,12 +54,15 @@ def parse_cpp_file(file_path, libclang_path):
 if __name__ == "__main__":
     # コマンドライン引数のパース
     parser = argparse.ArgumentParser(description="Generate function signatures from C++ struct")
-    parser.add_argument("cpp_file", help="Path to the C++ file")
-    parser.add_argument("libclang_path", help="Path to libclang library")
+    parser.add_argument("--cppfile", help="Path to the C++ file")
+    parser.add_argument("--libclang", help="Path to libclang library")
     args = parser.parse_args()
 
+    if not args.cppfile or not args.libclang:
+        parser.error("Both --cppfile and --libclang options are required.")
+
     # C++ファイルをパースして構造体情報を生成
-    struct_dict = parse_cpp_file(args.cpp_file, args.libclang_path)
+    struct_dict = parse_cpp_file(args.cppfile, args.libclang)
 
     # 各構造体に対して関数シグネチャを生成し、出力
     for struct_name, struct_members in struct_dict.items():
