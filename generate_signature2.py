@@ -1,8 +1,6 @@
+import argparse
 import clang.cindex
 import re
-
-# libclangのライブラリパスをグローバル変数として指定
-LIBCLANG_LIBRARY_PATH = "/path/to/clang/lib"
 
 def get_type_spelling(t):
     # 型情報を取得する関数
@@ -29,9 +27,9 @@ def generate_function_signature(struct_name, struct_members):
 
     return function_signatures
 
-def parse_cpp_file(file_path):
+def parse_cpp_file(file_path, libclang_path):
     # libclangを初期化
-    clang.cindex.Config.set_library_path(LIBCLANG_LIBRARY_PATH)
+    clang.cindex.Config.set_library_path(libclang_path)
 
     index = clang.cindex.Index.create()
 
@@ -53,14 +51,18 @@ def parse_cpp_file(file_path):
 
     return struct_dict
 
-# テスト用C++コードのパスを指定
-file_path = "test_struct.cpp"
+if __name__ == "__main__":
+    # コマンドライン引数のパース
+    parser = argparse.ArgumentParser(description="Generate function signatures from C++ struct")
+    parser.add_argument("cpp_file", help="Path to the C++ file")
+    parser.add_argument("libclang_path", help="Path to libclang library")
+    args = parser.parse_args()
 
-# C++ファイルをパースして構造体情報を生成
-struct_dict = parse_cpp_file(file_path)
+    # C++ファイルをパースして構造体情報を生成
+    struct_dict = parse_cpp_file(args.cpp_file, args.libclang_path)
 
-# 各構造体に対して関数シグネチャを生成し、出力
-for struct_name, struct_members in struct_dict.items():
-    function_signatures = generate_function_signature(struct_name, struct_members)
-    for signature in function_signatures:
-        print(signature)
+    # 各構造体に対して関数シグネチャを生成し、出力
+    for struct_name, struct_members in struct_dict.items():
+        function_signatures = generate_function_signature(struct_name, struct_members)
+        for signature in function_signatures:
+            print(signature)
