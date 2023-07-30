@@ -2,9 +2,6 @@ import argparse
 import clang.cindex
 import re
 
-# libclangのパス
-LIBCLANG_PATH = ""
-
 def get_type_spelling(t):
     # 型情報を取得する関数
     if t.kind == clang.cindex.TypeKind.POINTER:
@@ -20,17 +17,21 @@ def generate_function_signature(struct_name, struct_members, postfix):
 
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
-        # 関数名の接頭に"set"を追加
-        function_name = f"set{member_name}{postfix}"
-        # 関数シグネチャを生成してリストに追加
-        function_signature = f"int32_t {function_name}(const RIPBRG& key, {member_type}& {member_name});"
+        # 変数名が既にキャメルケースである場合はそのまま使用
+        if not member_name[0].isupper():
+            function_name = f"{member_name[0].upper()}{member_name[1:]}"
+        else:
+            function_name = member_name
+        # 関数名の接尾にユーザー入力の文字列を追加
+        function_name += postfix
+        function_signature = f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
         function_signatures.append(function_signature)
 
     return function_signatures
 
-def parse_cpp_file(file_path):
+def parse_cpp_file(file_path, libclang_path):
     # libclangを初期化
-    clang.cindex.Config.set_library_file(LIBCLANG_PATH)
+    clang.cindex.Config.set_library_path(libclang_path)
 
     index = clang.cindex.Index.create()
 
@@ -59,10 +60,8 @@ if __name__ == "__main__":
     parser.add_argument("--libclang", help="Path to libclang library", required=True)
     args = parser.parse_args()
 
-    LIBCLANG_PATH = args.libclang
-
     # C++ファイルをパースして構造体情報を生成
-    struct_dict = parse_cpp_file(args.cppfile)
+    struct_dict = parse_cpp_file(args.cppfile, args.libclang)
 
     # ユーザー入力を受け取る
     user_input = input("Enter the postfix for function names: ")
