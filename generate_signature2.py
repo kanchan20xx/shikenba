@@ -18,7 +18,7 @@ def generate_function_signature(struct_name, struct_members, postfix):
     # 各メンバ変数に対して関数シグネチャを生成
     for member_name, member_type in struct_members.items():
         # 関数名の接尾にユーザー入力の文字列を追加
-        function_name = f"set{member_name.capitalize()}{struct_name}{postfix}"
+        function_name = f"set{member_name.capitalize()}{postfix}"
         function_signature = f'int32_t {function_name}(const RIPBRG& key, {member_type}* {member_name});'
         function_signatures.append(function_signature)
 
