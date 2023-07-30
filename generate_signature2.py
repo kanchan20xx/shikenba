@@ -1,6 +1,5 @@
 import argparse
 import clang.cindex
-import re
 
 def get_type_spelling(t):
     # 型情報を取得する関数
@@ -11,45 +10,33 @@ def get_type_spelling(t):
     else:
         return t.spelling
 
-def get_doxygen_brief_comment(cursor):
-    # doxygenのbriefコメントを取得する関数
-    for child in cursor.get_children():
-        if child.kind == clang.cindex.CursorKind.PARM_DECL and child.brief_comment:
-            return f"/*! {child.brief_comment} */"
-    return ""
-
-def generate_can_function(struct_name, member_name, brief_comment):
-    # can関数の生成
-    can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}"
-    can_function_signature = f'{brief_comment}\nbool {can_function_name}(const RIPBRG& key);' if brief_comment else f'bool {can_function_name}(const RIPBRG& key);'
-    return can_function_signature
-
-def generate_set_function(struct_name, member_name, member_type, brief_comment):
-    # set関数の生成
-    if not member_name[0].isupper():
-        function_name = f"{member_name[0].upper()}{member_name[1:]}"
-    else:
-        function_name = member_name
-
-    function_signature = f'{brief_comment}\nint32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});' if brief_comment else f'int32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
-    return function_signature
-
+def get_doxygen_brief_comment():
+    # Doxygenコメントのbrief部分を取得する関数
+    return '/**\n * \\brief\n */'
 
 def generate_function_signature(struct_name, struct_members, postfix):
     # 関数シグネチャのリスト
     function_signatures = []
 
-    # 各メンバ変数に対して関数シグネチャを生成
-    for member_name, (member_type, member_cursor) in struct_members.items():
-        brief_comment = get_doxygen_brief_comment(member_cursor)
-
-        # can関数を追加
-        can_function_signature = generate_can_function(struct_name, member_name, brief_comment)
+    # can関数の生成
+    for member_name, _ in struct_members.items():
+        can_function_name = f"canSet{member_name[0].upper()}{member_name[1:]}"
+        can_function_signature = f'{get_doxygen_brief_comment()}\nbool {can_function_name}(const RIPBRG& key);'
         function_signatures.append(can_function_signature)
 
-        # set関数を追加
-        set_function_signature = generate_set_function(struct_name, member_name, member_type, brief_comment)
-        function_signatures.append(set_function_signature)
+    # set関数の生成
+    for member_name, member_type in struct_members.items():
+        # 変数名が既にキャメルケースである場合はそのまま使用
+        if not member_name[0].isupper():
+            function_name = f"{member_name[0].upper()}{member_name[1:]}"
+        else:
+            function_name = member_name
+        # 関数名の接尾にユーザー入力の文字列を追加
+        function_name += postfix
+
+        # 関数シグネチャを生成
+        function_signature = f'{get_doxygen_brief_comment()}\nint32_t set{function_name}(const RIPBRG& key, {member_type} {member_name});'
+        function_signatures.append(function_signature)
 
     return function_signatures
 
@@ -72,7 +59,7 @@ def parse_cpp_file(file_path, libclang_path):
                 if member.kind == clang.cindex.CursorKind.FIELD_DECL:
                     member_name = member.spelling
                     member_type = get_type_spelling(member.type)
-                    struct_members[member_name] = (member_type, member)
+                    struct_members[member_name] = member_type
             struct_dict[struct_name] = struct_members
 
     return struct_dict
